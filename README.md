@@ -1,5 +1,7 @@
 # ColorOS AOD Enhance
 
+![License](https://img.shields.io/github/license/Qjj7679/ColorOS_Aod_Enhance?style=flat-square)
+
 面向 ColorOS 的 AOD 功能增强模块（YukiHookAPI/Xposed）。提供可视化配置界面，自动保存配置，并在 系统界面/息屏 进程中生效。
 
 ## 功能概览
@@ -59,3 +61,6 @@ app/build/outputs/apk/debug/app-debug.apk
 ## 开发环境
 - Gradle Wrapper: `gradle/wrapper/gradle-wrapper.properties`
 - 依赖版本统一管理：`gradle/libs.versions.toml`
+
+## License
+MIT
