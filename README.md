@@ -2,7 +2,7 @@
 
 ![License](https://img.shields.io/github/license/Qjj7679/ColorOS_Aod_Enhance?style=flat-square)
 
-面向 ColorOS 的 AOD 功能增强模块（YukiHookAPI/Xposed）。提供可视化配置界面，自动保存配置，并在 系统界面/息屏 进程中生效。
+面向 ColorOS 的 AOD 功能增强模块（Xposed）。提供可视化配置界面，自动保存配置，并在 系统界面/息屏 进程中生效。
 
 ## 功能概览
 - 亮度：
