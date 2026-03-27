@@ -44,7 +44,8 @@ class FeaturesActivity : ComponentActivity() {
             MiuixTheme {
                 FeaturesScreen(
                     initial = AodConfigStore.read(contentResolver),
-                    onSave = { cfg -> AodConfigStore.write(contentResolver, cfg) }
+                    onSave = { cfg -> AodConfigStore.write(contentResolver, cfg) },
+                    context = this
                 )
             }
         }
@@ -54,7 +55,11 @@ class FeaturesActivity : ComponentActivity() {
 
 @OptIn(FlowPreview::class)
 @Composable
-private fun FeaturesScreen(initial: AodUiConfig, onSave: (AodUiConfig) -> Unit) {
+private fun FeaturesScreen(
+    initial: AodUiConfig,
+    onSave: (AodUiConfig) -> Unit,
+    context: android.content.Context
+) {
     var enablePanoramic by remember { mutableStateOf(initial.enablePanoramic) }
     var enableSettingsSupport by remember { mutableStateOf(initial.enableSettingsSupport) }
     var blockSingleClick by remember { mutableStateOf(initial.blockSingleClick) }
@@ -65,8 +70,9 @@ private fun FeaturesScreen(initial: AodUiConfig, onSave: (AodUiConfig) -> Unit) 
             .debounce(300)
             .distinctUntilChanged()
             .collect { (panoramic, settingsSupport, singleClick) ->
+                val base = AodConfigStore.read(context.contentResolver)
                 currentOnSave(
-                    AodUiConfig(
+                    base.copy(
                         enablePanoramic = panoramic,
                         enableSettingsSupport = settingsSupport,
                         blockSingleClick = singleClick,

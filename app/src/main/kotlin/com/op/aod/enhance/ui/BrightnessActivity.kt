@@ -39,7 +39,8 @@ class BrightnessActivity : ComponentActivity() {
             MiuixTheme {
                 BrightnessScreen(
                     initial = AodConfigStore.read(contentResolver),
-                    onSave = { cfg -> AodConfigStore.write(contentResolver, cfg) }
+                    onSave = { cfg -> AodConfigStore.write(contentResolver, cfg) },
+                    context = this
                 )
             }
         }
@@ -49,7 +50,11 @@ class BrightnessActivity : ComponentActivity() {
 
 @OptIn(FlowPreview::class)
 @Composable
-private fun BrightnessScreen(initial: AodUiConfig, onSave: (AodUiConfig) -> Unit) {
+private fun BrightnessScreen(
+    initial: AodUiConfig,
+    onSave: (AodUiConfig) -> Unit,
+    context: android.content.Context
+) {
     var initDark by remember { mutableFloatStateOf(initial.initDark.toFloat()) }
     var initBright by remember { mutableFloatStateOf(initial.initBright.toFloat()) }
     var runningMultiplier by remember { mutableFloatStateOf(initial.runningMultiplier) }
@@ -60,8 +65,9 @@ private fun BrightnessScreen(initial: AodUiConfig, onSave: (AodUiConfig) -> Unit
             .debounce(300)
             .distinctUntilChanged()
             .collect { (dark, bright, multi) ->
+                val base = AodConfigStore.read(context.contentResolver)
                 currentOnSave(
-                    AodUiConfig(
+                    base.copy(
                         initDark = dark.toInt(),
                         initBright = bright.toInt(),
                         runningMultiplier = multi,
