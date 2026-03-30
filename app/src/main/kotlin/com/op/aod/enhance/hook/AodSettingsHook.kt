@@ -1,9 +1,11 @@
 package com.op.aod.enhance.hook
 
 import android.content.Context
+import android.util.Log
 import com.highcapable.kavaref.KavaRef.Companion.resolve
 import com.highcapable.yukihookapi.hook.entity.YukiBaseHooker
 import com.highcapable.yukihookapi.hook.factory.toClass
+import com.op.aod.enhance.BuildConfig
 
 internal object AodSettingsHook {
 
@@ -17,7 +19,11 @@ internal object AodSettingsHook {
             }.hook {
                 after {
                     val cfg = AodConfigReader.read(currentAppContext)
-                    result = if (cfg.enableSettingsSupport) 1 else 0
+                    val resultValue = if (cfg.enableSettingsSupport) 1 else 0
+                    result = resultValue
+                    if (BuildConfig.DEBUG) {
+                        Log.d("AOD_Enhance", "AOD_SETTINGS_HOOK: getKeyAodAllDaySupportSettings -> $resultValue (enable=${cfg.enableSettingsSupport})")
+                    }
                 }
             }
     }

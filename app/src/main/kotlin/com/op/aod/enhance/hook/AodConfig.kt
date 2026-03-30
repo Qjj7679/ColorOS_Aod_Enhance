@@ -15,16 +15,9 @@ internal data class AodConfig(
 internal object AodConfigReader {
     private val uri: Uri = Uri.parse("content://com.op.aod.enhance.config/aod_config")
 
-    @Volatile
-    private var cached: AodConfig = AodConfig()
-
-    @Volatile
-    private var loaded: Boolean = false
-
     fun read(context: Context?): AodConfig {
-        if (loaded) return cached
-        if (context == null) return cached
-        cached = runCatching {
+        if (context == null) return AodConfig()
+        return runCatching {
             context.contentResolver.query(uri, null, null, null, null)?.use { c ->
                 if (c.moveToFirst()) {
                     AodConfig(
@@ -38,8 +31,6 @@ internal object AodConfigReader {
                 } else AodConfig()
             } ?: AodConfig()
         }.getOrDefault(AodConfig())
-        loaded = true
-        return cached
     }
 
     fun read(): AodConfig = read(currentAppContext)

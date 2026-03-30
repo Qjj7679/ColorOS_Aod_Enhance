@@ -16,23 +16,13 @@ object MainHook : YukiBaseHooker() {
 
     override fun onHook() {
         loadApp(name = SYSTEM_UI) {
-            val cfg = AodConfigReader.read()
             hookInitBrightnessFix()
-            if (cfg.runningMultiplier != 1.0f) {
-                hookRunningBrightnessBoost()
-            }
-            if (cfg.enablePanoramic) {
-                hookPanoramicAllDaySupport()
-            }
-            if (cfg.blockSingleClick) {
-                hookSingleClickWakeUpBlock()
-            }
+            hookRunningBrightnessBoost()
+            hookPanoramicAllDaySupport()
+            hookSingleClickWakeUpBlock()
         }
         loadApp(name = OPLUS_AOD) {
-            val cfg = AodConfigReader.read()
-            if (cfg.enableSettingsSupport) {
-                hookAodAllDaySupportSettings()
-            }
+            hookAodAllDaySupportSettings()
         }
     }
 

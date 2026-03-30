@@ -1,8 +1,11 @@
 package com.op.aod.enhance.hook
 
+import android.content.Context
 import com.highcapable.kavaref.KavaRef.Companion.resolve
 import com.highcapable.yukihookapi.hook.entity.YukiBaseHooker
 import com.highcapable.yukihookapi.hook.factory.toClass
+import com.op.aod.enhance.BuildConfig
+import de.robv.android.xposed.XposedBridge
 import kotlin.math.roundToInt
 
 internal object BrightnessHook {
@@ -17,9 +20,12 @@ internal object BrightnessHook {
             }.hook {
                 after {
                     val originalResult = result<Int>() ?: return@after
-                    val cfg = AodConfigReader.read()
+                    val cfg = AodConfigReader.read(currentAppContext)
                     val target = if (originalResult < INIT_DARK_THRESHOLD) cfg.initDark else cfg.initBright
                     result = target
+                    if (BuildConfig.DEBUG) {
+                        XposedBridge.log("[AOD_Enhance] AOD_INIT_FIX: 原始=$originalResult -> 修正为=$target")
+                    }
                 }
             }
     }
@@ -36,7 +42,7 @@ internal object BrightnessHook {
                     val originalNit = args(0).any() as? Float ?: return@before
                     val originalBrightness = args(1).any() as? Int ?: return@before
 
-                    val cfg = AodConfigReader.read()
+                    val cfg = AodConfigReader.read(currentAppContext)
                     val multiplier = cfg.runningMultiplier
                     if (multiplier == 1.0f) return@before
 
@@ -46,6 +52,9 @@ internal object BrightnessHook {
 
                     args(0).set(boostedNit)
                     args(1).set(clampedBrightness)
+                    if (BuildConfig.DEBUG) {
+                        XposedBridge.log("[AOD_Enhance] AOD_RUNNING_BOOST: $originalBrightness -> $clampedBrightness")
+                    }
                 }
             }
     }
@@ -56,5 +65,14 @@ internal object BrightnessHook {
     private const val INIT_DARK_THRESHOLD = 40
     private const val MIN_BRIGHTNESS = 0
     private const val MAX_BRIGHTNESS = 255
+
+    private val currentAppContext: Context?
+        get() = runCatching {
+            val activityThreadClass = Class.forName("android.app.ActivityThread")
+            activityThreadClass.getMethod("currentApplication").invoke(null) as? Context
+        }.getOrNull() ?: runCatching {
+            val appGlobalsClass = Class.forName("android.app.AppGlobals")
+            appGlobalsClass.getMethod("getInitialApplication").invoke(null) as? Context
+        }.getOrNull()
 
 }

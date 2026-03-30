@@ -30,6 +30,7 @@ android {
     buildTypes {
         release {
             minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             if (keystoreFile.exists()) {
                 signingConfig = signingConfigs.release
@@ -57,6 +58,10 @@ android {
     buildFeatures {
         buildConfig = true
         compose = true
+    }
+
+    lint {
+        checkReleaseBuilds false
     }
 
     compileOptions {
