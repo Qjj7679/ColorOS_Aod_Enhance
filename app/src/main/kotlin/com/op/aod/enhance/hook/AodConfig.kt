@@ -1,7 +1,10 @@
 package com.op.aod.enhance.hook
 
 import android.content.Context
+import android.database.ContentObserver
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 
 internal data class AodConfig(
     val initDark: Int = 80,
@@ -15,8 +18,42 @@ internal data class AodConfig(
 internal object AodConfigReader {
     private val uri: Uri = Uri.parse("content://com.op.aod.enhance.config/aod_config")
 
+    @Volatile
+    private var cached: AodConfig? = null
+
+    @Volatile
+    private var observerRegistered: Boolean = false
+
+    private var observer: ContentObserver? = null
+
+    fun startObserve(context: Context?) {
+        if (context == null || observerRegistered) return
+        observerRegistered = true
+        cached = readFromProvider(context)
+        val handler = Handler(Looper.getMainLooper())
+        observer = object : ContentObserver(handler) {
+            override fun onChange(selfChange: Boolean) {
+                cached = readFromProvider(context)
+            }
+        }.also {
+            context.contentResolver.registerContentObserver(uri, true, it)
+        }
+    }
+
     fun read(context: Context?): AodConfig {
         if (context == null) return AodConfig()
+        val local = cached
+        if (local != null) return local
+        val fresh = readFromProvider(context)
+        cached = fresh
+        return fresh
+    }
+
+    fun read(): AodConfig = read(currentAppContext)
+
+    fun currentContext(): Context? = currentAppContext
+
+    private fun readFromProvider(context: Context): AodConfig {
         return runCatching {
             context.contentResolver.query(uri, null, null, null, null)?.use { c ->
                 if (c.moveToFirst()) {
@@ -32,8 +69,6 @@ internal object AodConfigReader {
             } ?: AodConfig()
         }.getOrDefault(AodConfig())
     }
-
-    fun read(): AodConfig = read(currentAppContext)
 
     private val currentAppContext: Context?
         get() = runCatching {

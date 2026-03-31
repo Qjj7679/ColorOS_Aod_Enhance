@@ -16,6 +16,7 @@ object MainHook : YukiBaseHooker() {
 
     override fun onHook() {
         loadApp(name = SYSTEM_UI) {
+            AodConfigReader.startObserve(AodConfigReader.currentContext())
             hookInitBrightnessFix()
             hookRunningBrightnessBoost()
             hookPanoramicAllDaySupport()
