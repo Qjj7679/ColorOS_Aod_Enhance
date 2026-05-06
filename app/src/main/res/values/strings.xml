@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">ColorOS AOD增强</string>
+    <string name="xposed_description">Hook for enhance ColorOS AOD</string>
+</resources>

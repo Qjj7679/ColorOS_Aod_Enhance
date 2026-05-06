@@ -1,0 +1,36 @@
+# Gradle / Android build
+.gradle/
+build/
+**/build/
+local.properties
+.cxx/
+.externalNativeBuild/
+
+# IDE
+.idea/
+*.iml
+.androidide/
+.acside/
+.kotlin/
+
+# Signing
+*.jks
+*.keystore
+keystore.properties
+
+# Outputs
+*.apk
+*.aab
+*.ap_
+output-metadata.json
+
+# Logs / temp
+*.log
+captures/
+
+# Claude Code
+.claude/
+CLAUDE.md
+
+# Environment-specific
+gradle.properties
