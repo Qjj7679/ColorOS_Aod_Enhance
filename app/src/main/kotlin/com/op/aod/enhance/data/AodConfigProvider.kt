@@ -34,23 +34,23 @@ class AodConfigProvider : ContentProvider() {
     ): Cursor? {
         if (matcher.match(uri) != 1) return null
         val p = prefs() ?: return null
-        val cursor = MatrixCursor(arrayOf(
+        return MatrixCursor(arrayOf(
             AodConfigContract.KEY_INIT_DARK,
             AodConfigContract.KEY_INIT_BRIGHT,
             AodConfigContract.KEY_RUNNING_MULTIPLIER,
             AodConfigContract.KEY_ENABLE_PANORAMIC,
             AodConfigContract.KEY_ENABLE_SETTINGS_SUPPORT,
             AodConfigContract.KEY_BLOCK_SINGLE_CLICK,
-        ))
-        cursor.addRow(arrayOf(
-            p.getInt(AodConfigContract.KEY_INIT_DARK, AodConfigContract.DEFAULT_INIT_DARK).toString(),
-            p.getInt(AodConfigContract.KEY_INIT_BRIGHT, AodConfigContract.DEFAULT_INIT_BRIGHT).toString(),
-            p.getFloat(AodConfigContract.KEY_RUNNING_MULTIPLIER, AodConfigContract.DEFAULT_RUNNING_MULTIPLIER).toString(),
-            p.getBoolean(AodConfigContract.KEY_ENABLE_PANORAMIC, AodConfigContract.DEFAULT_ENABLE_PANORAMIC).toString(),
-            p.getBoolean(AodConfigContract.KEY_ENABLE_SETTINGS_SUPPORT, AodConfigContract.DEFAULT_ENABLE_SETTINGS_SUPPORT).toString(),
-            p.getBoolean(AodConfigContract.KEY_BLOCK_SINGLE_CLICK, AodConfigContract.DEFAULT_BLOCK_SINGLE_CLICK).toString(),
-        ))
-        return cursor
+        )).apply {
+            addRow(arrayOf<Any>(
+                p.getInt(AodConfigContract.KEY_INIT_DARK, AodConfigContract.DEFAULT_INIT_DARK),
+                p.getInt(AodConfigContract.KEY_INIT_BRIGHT, AodConfigContract.DEFAULT_INIT_BRIGHT),
+                p.getFloat(AodConfigContract.KEY_RUNNING_MULTIPLIER, AodConfigContract.DEFAULT_RUNNING_MULTIPLIER),
+                if (p.getBoolean(AodConfigContract.KEY_ENABLE_PANORAMIC, AodConfigContract.DEFAULT_ENABLE_PANORAMIC)) 1 else 0,
+                if (p.getBoolean(AodConfigContract.KEY_ENABLE_SETTINGS_SUPPORT, AodConfigContract.DEFAULT_ENABLE_SETTINGS_SUPPORT)) 1 else 0,
+                if (p.getBoolean(AodConfigContract.KEY_BLOCK_SINGLE_CLICK, AodConfigContract.DEFAULT_BLOCK_SINGLE_CLICK)) 1 else 0,
+            ))
+        }
     }
 
     override fun update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<out String>?): Int {
@@ -59,20 +59,19 @@ class AodConfigProvider : ContentProvider() {
         val e = p.edit()
         values?.let {
             if (it.containsKey(AodConfigContract.KEY_INIT_DARK))
-                e.putInt(AodConfigContract.KEY_INIT_DARK, it.getAsInteger(AodConfigContract.KEY_INIT_DARK))
+                e.putInt(AodConfigContract.KEY_INIT_DARK, it.getAsInteger(AodConfigContract.KEY_INIT_DARK) ?: AodConfigContract.DEFAULT_INIT_DARK)
             if (it.containsKey(AodConfigContract.KEY_INIT_BRIGHT))
-                e.putInt(AodConfigContract.KEY_INIT_BRIGHT, it.getAsInteger(AodConfigContract.KEY_INIT_BRIGHT))
+                e.putInt(AodConfigContract.KEY_INIT_BRIGHT, it.getAsInteger(AodConfigContract.KEY_INIT_BRIGHT) ?: AodConfigContract.DEFAULT_INIT_BRIGHT)
             if (it.containsKey(AodConfigContract.KEY_RUNNING_MULTIPLIER))
-                e.putFloat(AodConfigContract.KEY_RUNNING_MULTIPLIER, it.getAsFloat(AodConfigContract.KEY_RUNNING_MULTIPLIER))
+                e.putFloat(AodConfigContract.KEY_RUNNING_MULTIPLIER, it.getAsFloat(AodConfigContract.KEY_RUNNING_MULTIPLIER) ?: AodConfigContract.DEFAULT_RUNNING_MULTIPLIER)
             if (it.containsKey(AodConfigContract.KEY_ENABLE_PANORAMIC))
-                e.putBoolean(AodConfigContract.KEY_ENABLE_PANORAMIC, it.getAsBoolean(AodConfigContract.KEY_ENABLE_PANORAMIC))
+                e.putBoolean(AodConfigContract.KEY_ENABLE_PANORAMIC, it.getAsBoolean(AodConfigContract.KEY_ENABLE_PANORAMIC) ?: AodConfigContract.DEFAULT_ENABLE_PANORAMIC)
             if (it.containsKey(AodConfigContract.KEY_ENABLE_SETTINGS_SUPPORT))
-                e.putBoolean(AodConfigContract.KEY_ENABLE_SETTINGS_SUPPORT, it.getAsBoolean(AodConfigContract.KEY_ENABLE_SETTINGS_SUPPORT))
+                e.putBoolean(AodConfigContract.KEY_ENABLE_SETTINGS_SUPPORT, it.getAsBoolean(AodConfigContract.KEY_ENABLE_SETTINGS_SUPPORT) ?: AodConfigContract.DEFAULT_ENABLE_SETTINGS_SUPPORT)
             if (it.containsKey(AodConfigContract.KEY_BLOCK_SINGLE_CLICK))
-                e.putBoolean(AodConfigContract.KEY_BLOCK_SINGLE_CLICK, it.getAsBoolean(AodConfigContract.KEY_BLOCK_SINGLE_CLICK))
+                e.putBoolean(AodConfigContract.KEY_BLOCK_SINGLE_CLICK, it.getAsBoolean(AodConfigContract.KEY_BLOCK_SINGLE_CLICK) ?: AodConfigContract.DEFAULT_BLOCK_SINGLE_CLICK)
         }
         e.apply()
-        context?.contentResolver?.notifyChange(uri, null)
         return 1
     }
 

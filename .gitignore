@@ -28,6 +28,12 @@ output-metadata.json
 *.log
 captures/
 
+# Project-level Gradle init scripts (not auto-loaded)
+init.d/
+
+# Scripts
+*.sh
+
 # Claude Code
 .claude/
 CLAUDE.md

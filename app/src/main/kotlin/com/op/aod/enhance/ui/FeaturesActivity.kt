@@ -18,6 +18,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.op.aod.enhance.data.AodConfigStore
 import com.op.aod.enhance.data.AodUiConfig
@@ -25,7 +26,7 @@ import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.extra.SuperSwitch
+import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
@@ -42,8 +43,7 @@ class FeaturesActivity : ComponentActivity() {
             MiuixTheme {
                 FeaturesScreen(
                     initial = AodConfigStore.read(contentResolver),
-                    onSave = { cfg -> AodConfigStore.write(contentResolver, cfg) },
-                    context = this
+                    onSave = { cfg -> AodConfigStore.write(contentResolver, cfg) }
                 )
             }
         }
@@ -55,13 +55,13 @@ class FeaturesActivity : ComponentActivity() {
 @Composable
 private fun FeaturesScreen(
     initial: AodUiConfig,
-    onSave: (AodUiConfig) -> Unit,
-    context: android.content.Context
+    onSave: (AodUiConfig) -> Unit
 ) {
     var enablePanoramic by remember { mutableStateOf(initial.enablePanoramic) }
     var enableSettingsSupport by remember { mutableStateOf(initial.enableSettingsSupport) }
     var blockSingleClick by remember { mutableStateOf(initial.blockSingleClick) }
     val currentOnSave by rememberUpdatedState(onSave)
+    val resolver = LocalContext.current.contentResolver
 
     LaunchedEffect(Unit) {
         snapshotFlow { Triple(enablePanoramic, enableSettingsSupport, blockSingleClick) }
@@ -69,7 +69,8 @@ private fun FeaturesScreen(
             .debounce(300)
             .distinctUntilChanged()
             .collect { (panoramic, settingsSupport, singleClick) ->
-                val base = AodConfigStore.read(context.contentResolver)
+                // 从缓存读取完整配置再覆写——保证其他页面的设置不被默认值覆盖
+                val base = AodConfigStore.read(resolver)
                 currentOnSave(
                     base.copy(
                         enablePanoramic = panoramic,
@@ -107,19 +108,19 @@ private fun FeaturesScreen(
                         color = MiuixTheme.colorScheme.background,
                     ),
                 ) {
-                    SuperSwitch(
+                    SwitchPreference(
                         title = "系统界面-全天全景AOD支持",
                         summary = "让系统界面解锁全天全景 AOD 相关能力",
                         checked = enablePanoramic,
                         onCheckedChange = { enablePanoramic = it },
                     )
-                    SuperSwitch(
+                    SwitchPreference(
                         title = "息屏-全天全景AOD开关",
                         summary = "在息屏设置中显示全天全景 AOD 开关",
                         checked = enableSettingsSupport,
                         onCheckedChange = { enableSettingsSupport = it },
                     )
-                    SuperSwitch(
+                    SwitchPreference(
                         title = "AOD单击唤醒屏蔽",
                         summary = "避免 AOD 单击误触导致唤醒",
                         checked = blockSingleClick,

@@ -18,6 +18,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.op.aod.enhance.data.AodConfigStore
 import com.op.aod.enhance.data.AodUiConfig
@@ -40,8 +41,7 @@ class BrightnessActivity : ComponentActivity() {
             MiuixTheme {
                 BrightnessScreen(
                     initial = AodConfigStore.read(contentResolver),
-                    onSave = { cfg -> AodConfigStore.write(contentResolver, cfg) },
-                    context = this
+                    onSave = { cfg -> AodConfigStore.write(contentResolver, cfg) }
                 )
             }
         }
@@ -53,13 +53,13 @@ class BrightnessActivity : ComponentActivity() {
 @Composable
 private fun BrightnessScreen(
     initial: AodUiConfig,
-    onSave: (AodUiConfig) -> Unit,
-    context: android.content.Context
+    onSave: (AodUiConfig) -> Unit
 ) {
     var initDark by remember { mutableFloatStateOf(initial.initDark.toFloat()) }
     var initBright by remember { mutableFloatStateOf(initial.initBright.toFloat()) }
     var runningMultiplier by remember { mutableFloatStateOf(initial.runningMultiplier) }
     val currentOnSave by rememberUpdatedState(onSave)
+    val resolver = LocalContext.current.contentResolver
 
     LaunchedEffect(Unit) {
         snapshotFlow { Triple(initDark, initBright, runningMultiplier) }
@@ -67,7 +67,8 @@ private fun BrightnessScreen(
             .debounce(300)
             .distinctUntilChanged()
             .collect { (dark, bright, multi) ->
-                val base = AodConfigStore.read(context.contentResolver)
+                // 从缓存读取完整配置再覆写——保证其他页面的设置不被默认值覆盖
+                val base = AodConfigStore.read(resolver)
                 currentOnSave(
                     base.copy(
                         initDark = dark.toInt(),
@@ -95,7 +96,7 @@ private fun BrightnessScreen(
             Text("熄屏前暗光环境AOD亮度：${initDark.toInt()}")
             Slider(
                 value = initDark,
-                onValueChange = { initDark = it.toInt().coerceIn(0, 255).toFloat() },
+                onValueChange = { initDark = it.toInt().toFloat() },
                 valueRange = 0f..255f,
                 steps = 254,
                 modifier = Modifier.fillMaxWidth()
@@ -104,7 +105,7 @@ private fun BrightnessScreen(
             Text("熄屏前亮光环境AOD亮度：${initBright.toInt()}")
             Slider(
                 value = initBright,
-                onValueChange = { initBright = it.toInt().coerceIn(0, 255).toFloat() },
+                onValueChange = { initBright = it.toInt().toFloat() },
                 valueRange = 0f..255f,
                 steps = 254,
                 modifier = Modifier.fillMaxWidth()

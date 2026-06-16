@@ -16,7 +16,7 @@ import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.extra.SuperArrow
+import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 class MainActivity : ComponentActivity() {
@@ -60,12 +60,12 @@ private fun MainScreen(
                     color = MiuixTheme.colorScheme.background,
                 )
             ) {
-                SuperArrow(
+                ArrowPreference(
                     title = "AOD亮度设置",
                     summary = "调整初始亮度与运行时倍率",
                     onClick = onOpenBrightness,
                 )
-                SuperArrow(
+                ArrowPreference(
                     title = "AOD功能设置",
                     summary = "系统界面、息屏设置与唤醒行为",
                     onClick = onOpenFeatures,

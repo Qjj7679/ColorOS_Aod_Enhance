@@ -5,19 +5,26 @@ import android.content.ContentValues
 
 object AodConfigStore {
 
+    private val DEFAULT_CONFIG = AodUiConfig()
+
     @Volatile
     private var cached: AodUiConfig? = null
 
     /**
-     * 读取配置，优先从 Provider 获取最新值，不可用时返回缓存或默认值。
+     * 读取配置，缓存优先。
+     *
+     * 首次调用走一次 IPC query 填充缓存；后续读直接返回缓存值。
+     * 写入侧 ([write]) 同步更新缓存，保证读写一致性。
      */
     fun read(resolver: ContentResolver): AodUiConfig {
+        val local = cached
+        if (local != null) return local
         val fresh = queryOrNull(resolver)
         if (fresh != null) {
             cached = fresh
             return fresh
         }
-        return cached ?: AodUiConfig()
+        return DEFAULT_CONFIG
     }
 
     fun write(resolver: ContentResolver, cfg: AodUiConfig) {
@@ -37,19 +44,14 @@ object AodConfigStore {
         return runCatching {
             resolver.query(AodConfigProvider.CONTENT_URI, null, null, null, null)?.use { c ->
                 if (c.moveToFirst()) {
+                    val v = AodConfigContract.readRow(c)
                     AodUiConfig(
-                        initDark = c.getString(AodConfigContract.COL_INIT_DARK)?.toIntOrNull()
-                            ?: AodConfigContract.DEFAULT_INIT_DARK,
-                        initBright = c.getString(AodConfigContract.COL_INIT_BRIGHT)?.toIntOrNull()
-                            ?: AodConfigContract.DEFAULT_INIT_BRIGHT,
-                        runningMultiplier = c.getString(AodConfigContract.COL_RUNNING_MULTIPLIER)?.toFloatOrNull()
-                            ?: AodConfigContract.DEFAULT_RUNNING_MULTIPLIER,
-                        enablePanoramic = c.getString(AodConfigContract.COL_ENABLE_PANORAMIC)?.toBooleanStrictOrNull()
-                            ?: AodConfigContract.DEFAULT_ENABLE_PANORAMIC,
-                        enableSettingsSupport = c.getString(AodConfigContract.COL_ENABLE_SETTINGS_SUPPORT)?.toBooleanStrictOrNull()
-                            ?: AodConfigContract.DEFAULT_ENABLE_SETTINGS_SUPPORT,
-                        blockSingleClick = c.getString(AodConfigContract.COL_BLOCK_SINGLE_CLICK)?.toBooleanStrictOrNull()
-                            ?: AodConfigContract.DEFAULT_BLOCK_SINGLE_CLICK,
+                        initDark = v.initDark,
+                        initBright = v.initBright,
+                        runningMultiplier = v.runningMultiplier,
+                        enablePanoramic = v.enablePanoramic,
+                        enableSettingsSupport = v.enableSettingsSupport,
+                        blockSingleClick = v.blockSingleClick,
                     )
                 } else null
             }
