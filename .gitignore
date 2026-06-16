@@ -34,6 +34,9 @@ init.d/
 # Scripts
 *.sh
 
+# CodeGraph
+.codegraph/
+
 # Claude Code
 .claude/
 CLAUDE.md
