@@ -5,17 +5,15 @@ import com.highcapable.kavaref.KavaRef.Companion.resolve
 import com.highcapable.yukihookapi.hook.entity.YukiBaseHooker
 import com.highcapable.yukihookapi.hook.factory.toClass
 import com.op.aod.enhance.BuildConfig
-import java.util.concurrent.ConcurrentHashMap
 
 internal object PanoramicHook {
 
-    /** 反射方法缓存：Class -> Method */
-    private val methodCache = ConcurrentHashMap<Class<*>, java.lang.reflect.Method?>()
-
-    /** 反射字段缓存：Class -> List<Field> */
-    private val fieldCache = ConcurrentHashMap<Class<*>, List<java.lang.reflect.Field>>()
-
-    private val FIELD_NAMES = listOf("isSupportPanoramicAllDay", "isSupportPanoramicAllDayByPanelFeature", "isSupportPanoramicByPanelFeature")
+    private val FIELD_NAMES = listOf(
+        "isSupportPanoramicAllDay",
+        "isSupportPanoramicAllDayByPanelFeature",
+        "isSupportPanoramicByPanelFeature",
+        "isSupportPanoramic"
+    )
     private const val SMOOTH_TRANSITION_CONTROLLER = "com.oplus.systemui.aod.display.SmoothTransitionController"
 
     fun YukiBaseHooker.hookPanoramicAllDaySupport() {
@@ -23,42 +21,44 @@ internal object PanoramicHook {
             SMOOTH_TRANSITION_CONTROLLER.toClass(appClassLoader).resolve()
         }.getOrNull() ?: return
 
-        val target = runCatching {
-            clazz.firstMethod { name = "getInstance" }
-        }.getOrNull() ?: return
-
         if (BuildConfig.DEBUG) {
             Log.d("AOD_Enhance", "AOD_PANORAMIC_HOOK: Registered")
         }
 
-        target.hook {
-            after {
-                val instance = result<Any>() ?: return@after
-                val cfg = AodConfigReader.read(MainHook.hostAppContext)
-                if (!cfg.enablePanoramic) return@after
+        // 一次性字段修正逻辑
+        fun applyPanoramicSupport(instance: Any) {
+            val cfg = AodConfigReader.read(MainHook.hostAppContext)
+            if (!cfg.enablePanoramic) return
 
-                val realClass = instance::class.java
-
-                // 方法1：调用 setPanoramicSupportedByRemote（带方法缓存）
+            val realClass = instance::class.java
+            for (name in FIELD_NAMES) {
                 runCatching {
-                    val method = methodCache.getOrPut(realClass) {
-                        runCatching { realClass.getMethod("setPanoramicSupportedByRemote") }.getOrNull()
-                    }
-                    method?.invoke(instance)
+                    val f = realClass.getDeclaredField(name)
+                    f.isAccessible = true
+                    f.setBoolean(instance, true)
                 }
+            }
 
-                // 方法2：反射设字段（带字段缓存，双重保障）
-                val fields = fieldCache.getOrPut(realClass) {
-                    FIELD_NAMES.mapNotNull { name ->
-                        runCatching { realClass.getDeclaredField(name) }.getOrNull()
-                    }
-                }
-                for (f in fields) {
-                    runCatching {
-                        f.isAccessible = true
-                        f.setBoolean(instance, true)
-                    }
-                }
+            if (BuildConfig.DEBUG) {
+                Log.d("AOD_Enhance", "AOD_PANORAMIC_HOOK: Applied panoramic support")
+            }
+        }
+
+        // Hook 1: initSmoothTransitionState — 初始化时修正（一次性）
+        runCatching {
+            clazz.firstMethod { name = "initSmoothTransitionState" }
+        }.getOrNull()?.hook {
+            after {
+                applyPanoramicSupport(instance<Any>())
+            }
+        }
+
+        // Hook 2: setPanoramicSupportedByRemote — 远程调用时修正
+        runCatching {
+            clazz.firstMethod { name = "setPanoramicSupportedByRemote" }
+        }.getOrNull()?.hook {
+            after {
+                applyPanoramicSupport(instance<Any>())
             }
         }
     }

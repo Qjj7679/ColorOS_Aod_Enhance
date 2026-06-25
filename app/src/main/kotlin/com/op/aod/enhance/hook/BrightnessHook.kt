@@ -38,7 +38,7 @@ internal object BrightnessHook {
             val dozeMethodNames = listOf(
                 "setDozeScreenBrightness",
                 "setBrightnessForFallbackStrategy",
-                "setBrightness4FallbackStrategy"
+                "setBrightness4FallbackStrategy" // 旧版 ColorOS 兼容，新版该方法不存在会被 runCatching 静默跳过
             )
             for (methodName in dozeMethodNames) {
                 runCatching { hookDozeBrightnessMethod(methodName) }
