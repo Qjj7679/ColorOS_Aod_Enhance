@@ -28,6 +28,7 @@ class AodConfigProvider : ContentProvider() {
             AodConfigContract.KEY_ENABLE_PANORAMIC,
             AodConfigContract.KEY_ENABLE_SETTINGS_SUPPORT,
             AodConfigContract.KEY_BLOCK_SINGLE_CLICK,
+            AodConfigContract.KEY_BLOCK_LOW_LIGHT_HIDE,
         )
     }
 
@@ -52,6 +53,7 @@ class AodConfigProvider : ContentProvider() {
                 if (p.getBoolean(AodConfigContract.KEY_ENABLE_PANORAMIC, AodConfigContract.DEFAULT_ENABLE_PANORAMIC)) 1 else 0,
                 if (p.getBoolean(AodConfigContract.KEY_ENABLE_SETTINGS_SUPPORT, AodConfigContract.DEFAULT_ENABLE_SETTINGS_SUPPORT)) 1 else 0,
                 if (p.getBoolean(AodConfigContract.KEY_BLOCK_SINGLE_CLICK, AodConfigContract.DEFAULT_BLOCK_SINGLE_CLICK)) 1 else 0,
+                if (p.getBoolean(AodConfigContract.KEY_BLOCK_LOW_LIGHT_HIDE, AodConfigContract.DEFAULT_BLOCK_LOW_LIGHT_HIDE)) 1 else 0,
             ))
         }
     }
@@ -73,8 +75,10 @@ class AodConfigProvider : ContentProvider() {
                 e.putBoolean(AodConfigContract.KEY_ENABLE_SETTINGS_SUPPORT, it.getAsBoolean(AodConfigContract.KEY_ENABLE_SETTINGS_SUPPORT) ?: AodConfigContract.DEFAULT_ENABLE_SETTINGS_SUPPORT)
             if (it.containsKey(AodConfigContract.KEY_BLOCK_SINGLE_CLICK))
                 e.putBoolean(AodConfigContract.KEY_BLOCK_SINGLE_CLICK, it.getAsBoolean(AodConfigContract.KEY_BLOCK_SINGLE_CLICK) ?: AodConfigContract.DEFAULT_BLOCK_SINGLE_CLICK)
+            if (it.containsKey(AodConfigContract.KEY_BLOCK_LOW_LIGHT_HIDE))
+                e.putBoolean(AodConfigContract.KEY_BLOCK_LOW_LIGHT_HIDE, it.getAsBoolean(AodConfigContract.KEY_BLOCK_LOW_LIGHT_HIDE) ?: AodConfigContract.DEFAULT_BLOCK_LOW_LIGHT_HIDE)
         }
-        e.commit()
+        e.apply()
         return 1
     }
 

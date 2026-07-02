@@ -1,6 +1,7 @@
 package com.op.aod.enhance.data
 
 import android.database.Cursor
+import kotlin.concurrent.Volatile
 
 /**
  * 配置契约：定义 ContentProvider 的键名和常量。
@@ -22,6 +23,7 @@ object AodConfigContract {
     const val KEY_ENABLE_PANORAMIC = "enable_panoramic"
     const val KEY_ENABLE_SETTINGS_SUPPORT = "enable_settings_support"
     const val KEY_BLOCK_SINGLE_CLICK = "block_single_click"
+    const val KEY_BLOCK_LOW_LIGHT_HIDE = "block_low_light_hide"
 
     // 默认值
     const val DEFAULT_INIT_DARK = 80
@@ -30,8 +32,10 @@ object AodConfigContract {
     const val DEFAULT_ENABLE_PANORAMIC = true
     const val DEFAULT_ENABLE_SETTINGS_SUPPORT = true
     const val DEFAULT_BLOCK_SINGLE_CLICK = true
+    const val DEFAULT_BLOCK_LOW_LIGHT_HIDE = true
 
-    /** 列索引缓存（延迟初始化，只在首次 readRow 时查询一次） */
+    /** 列索引缓存（延迟初始化，只在首次 readRow 时查询一次）。@Volatile 保证多线程可见性。 */
+    @Volatile
     private var columnIndices: IntArray? = null
 
     /**
@@ -47,6 +51,7 @@ object AodConfigContract {
             c.getColumnIndexOrThrow(KEY_ENABLE_PANORAMIC),
             c.getColumnIndexOrThrow(KEY_ENABLE_SETTINGS_SUPPORT),
             c.getColumnIndexOrThrow(KEY_BLOCK_SINGLE_CLICK),
+            c.getColumnIndexOrThrow(KEY_BLOCK_LOW_LIGHT_HIDE),
         )
         columnIndices = indices
         return indices
@@ -67,6 +72,7 @@ object AodConfigContract {
             enablePanoramic = c.getInt(indices[3]) == 1,
             enableSettingsSupport = c.getInt(indices[4]) == 1,
             blockSingleClick = c.getInt(indices[5]) == 1,
+            blockLowLightHide = c.getInt(indices[6]) == 1,
         )
     }
 
@@ -80,5 +86,6 @@ object AodConfigContract {
         val enablePanoramic: Boolean,
         val enableSettingsSupport: Boolean,
         val blockSingleClick: Boolean,
+        val blockLowLightHide: Boolean,
     )
 }

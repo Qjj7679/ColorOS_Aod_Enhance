@@ -9,33 +9,46 @@ import com.op.aod.enhance.hook.BrightnessHook.hookInitBrightnessFix
 import com.op.aod.enhance.hook.BrightnessHook.hookRunningBrightnessBoost
 import com.op.aod.enhance.hook.PanoramicHook.hookPanoramicAllDaySupport
 import com.op.aod.enhance.hook.SingleClickBlockHook.hookSingleClickWakeUpBlock
+import com.op.aod.enhance.hook.LowLightHideHook.hookLowLightAodHide
 
 /**
  * OP AOD Enhance - 主入口
  *
  * 仅负责按包名分发到各功能 Hook，
- * 并为所有 Hook 提供统一的 [hostAppContext] 缓存。
+ * 并为所有 Hook 提供统一的 [hostAppContext]。
  */
 object MainHook : YukiBaseHooker() {
 
     /**
-     * 当前宿主进程的 Application Context，仅初始化一次。
+     * 当前宿主进程的 Application Context。
      *
-     * 所有 Hook 应通过 [hostAppContext] 获取 Context，而非自行反射获取，
-     * 以避免每帧重复反射调用造成的对象分配和 CPU 开销。
+     * 使用可重试的获取机制而非 lazy 缓存，避免进程启动早期
+     * `ActivityThread.currentApplication()` 返回 null 时
+     * null 被永久缓存的问题。
+     *
+     * 一旦成功获取非 null 值，后续调用直接返回缓存值（零开销）。
+     * 所有 Hook 应通过 [hostAppContext] 获取 Context。
      */
-    val hostAppContext: Context? by lazy {
-        runCatching {
+    val hostAppContext: Context?
+        get() {
+            _cachedContext?.let { return it }
+            val ctx = fetchContext()
+            if (ctx != null) _cachedContext = ctx
+            return ctx
+        }
+
+    @Volatile
+    private var _cachedContext: Context? = null
+
+    /** 反射获取 Application Context，双重降级策略。 */
+    private fun fetchContext(): Context? {
+        return runCatching {
             Class.forName("android.app.ActivityThread")
                 .getMethod("currentApplication").invoke(null) as? Context
         }.getOrNull() ?: runCatching {
             Class.forName("android.app.AppGlobals")
                 .getMethod("getInitialApplication").invoke(null) as? Context
-        }.getOrNull().also {
-            if (it == null && BuildConfig.DEBUG) {
-                Log.d("AOD_Enhance", "WARN: hostAppContext is null after both fallback paths")
-            }
-        }
+        }.getOrNull()
     }
 
     override fun onHook() {
@@ -44,6 +57,7 @@ object MainHook : YukiBaseHooker() {
             runCatching { hookRunningBrightnessBoost() }
             runCatching { hookPanoramicAllDaySupport() }
             runCatching { hookSingleClickWakeUpBlock() }
+            runCatching { hookLowLightAodHide() }
         }
         loadApp(name = OPLUS_AOD) {
             runCatching { hookAodAllDaySupportSettings() }

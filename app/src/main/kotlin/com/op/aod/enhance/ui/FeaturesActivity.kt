@@ -60,6 +60,7 @@ private fun FeaturesScreen(
     var enablePanoramic by remember { mutableStateOf(initial.enablePanoramic) }
     var enableSettingsSupport by remember { mutableStateOf(initial.enableSettingsSupport) }
     var blockSingleClick by remember { mutableStateOf(initial.blockSingleClick) }
+    var blockLowLightHide by remember { mutableStateOf(initial.blockLowLightHide) }
     val currentOnSave by rememberUpdatedState(onSave)
     val resolver = LocalContext.current.contentResolver
 
@@ -76,8 +77,20 @@ private fun FeaturesScreen(
                         enablePanoramic = panoramic,
                         enableSettingsSupport = settingsSupport,
                         blockSingleClick = singleClick,
+                        blockLowLightHide = blockLowLightHide,
                     )
                 )
+            }
+    }
+
+    LaunchedEffect(Unit) {
+        snapshotFlow { blockLowLightHide }
+            .drop(1)
+            .debounce(300)
+            .distinctUntilChanged()
+            .collect { lowLightHide ->
+                val base = AodConfigStore.read(resolver)
+                currentOnSave(base.copy(blockLowLightHide = lowLightHide))
             }
     }
 
@@ -125,6 +138,12 @@ private fun FeaturesScreen(
                         summary = "避免 AOD 单击误触导致唤醒",
                         checked = blockSingleClick,
                         onCheckedChange = { blockSingleClick = it },
+                    )
+                    SwitchPreference(
+                        title = "低光环境保持AOD显示",
+                        summary = "阻止极暗/夜间低光环境自动关闭 AOD",
+                        checked = blockLowLightHide,
+                        onCheckedChange = { blockLowLightHide = it },
                     )
                 }
             }

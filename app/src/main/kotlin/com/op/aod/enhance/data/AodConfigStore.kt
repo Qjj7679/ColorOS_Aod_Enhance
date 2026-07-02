@@ -37,6 +37,7 @@ object AodConfigStore {
             put(AodConfigContract.KEY_ENABLE_PANORAMIC, cfg.enablePanoramic)
             put(AodConfigContract.KEY_ENABLE_SETTINGS_SUPPORT, cfg.enableSettingsSupport)
             put(AodConfigContract.KEY_BLOCK_SINGLE_CLICK, cfg.blockSingleClick)
+            put(AodConfigContract.KEY_BLOCK_LOW_LIGHT_HIDE, cfg.blockLowLightHide)
         }
         resolver.update(AodConfigProvider.CONTENT_URI, values, null, null)
         // 使用 CAS 更新缓存，避免多线程竞争丢失更新
@@ -55,6 +56,7 @@ object AodConfigStore {
                         enablePanoramic = v.enablePanoramic,
                         enableSettingsSupport = v.enableSettingsSupport,
                         blockSingleClick = v.blockSingleClick,
+                        blockLowLightHide = v.blockLowLightHide,
                     )
                 } else null
             }

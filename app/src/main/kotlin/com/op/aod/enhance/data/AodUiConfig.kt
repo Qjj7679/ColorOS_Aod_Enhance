@@ -12,4 +12,5 @@ data class AodUiConfig(
     val enablePanoramic: Boolean = AodConfigContract.DEFAULT_ENABLE_PANORAMIC,
     val enableSettingsSupport: Boolean = AodConfigContract.DEFAULT_ENABLE_SETTINGS_SUPPORT,
     val blockSingleClick: Boolean = AodConfigContract.DEFAULT_BLOCK_SINGLE_CLICK,
+    val blockLowLightHide: Boolean = AodConfigContract.DEFAULT_BLOCK_LOW_LIGHT_HIDE,
 )

@@ -14,7 +14,6 @@ internal object AodSettingsHook {
             .resolve()
             .firstMethod {
                 name = "getKeyAodAllDaySupportSettings"
-                parameters(android.content.Context::class, Int::class)
             }.hook {
                 after {
                     val cfg = AodConfigReader.read(MainHook.hostAppContext)

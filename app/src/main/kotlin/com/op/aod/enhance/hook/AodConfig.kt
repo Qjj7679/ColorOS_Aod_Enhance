@@ -12,6 +12,7 @@ internal data class AodConfig(
     val enablePanoramic: Boolean = AodConfigContract.DEFAULT_ENABLE_PANORAMIC,
     val enableSettingsSupport: Boolean = AodConfigContract.DEFAULT_ENABLE_SETTINGS_SUPPORT,
     val blockSingleClick: Boolean = AodConfigContract.DEFAULT_BLOCK_SINGLE_CLICK,
+    val blockLowLightHide: Boolean = AodConfigContract.DEFAULT_BLOCK_LOW_LIGHT_HIDE,
 )
 
 internal object AodConfigReader {
@@ -49,13 +50,21 @@ internal object AodConfigReader {
         val cachedVal = cached
         if (!isFirstRead && cachedVal != null) {
             val now = System.nanoTime()
-            // 修复：使用已缓存的 lastReadTimeNs 判断，避免首次读取时 lastReadTimeNs=0 的问题
             if (now - lastReadTimeNs < CACHE_TTL_NS) {
                 return cachedVal
             }
         }
 
-        return readFromProvider(context) ?: cachedVal ?: DEFAULT_CONFIG
+        val fresh = readFromProvider(context)
+        if (fresh != null) {
+            return fresh
+        }
+
+        // Provider 读取失败时也标记已初始化，避免 isFirstRead 永远为 true
+        // 导致后续每次调用都重试 IPC，造成无限 IPC 打磨
+        isFirstRead = false
+
+        return cachedVal ?: DEFAULT_CONFIG
     }
 
     /**
@@ -73,6 +82,7 @@ internal object AodConfigReader {
                         enablePanoramic = v.enablePanoramic,
                         enableSettingsSupport = v.enableSettingsSupport,
                         blockSingleClick = v.blockSingleClick,
+                        blockLowLightHide = v.blockLowLightHide,
                     )
                 } else null
             }
