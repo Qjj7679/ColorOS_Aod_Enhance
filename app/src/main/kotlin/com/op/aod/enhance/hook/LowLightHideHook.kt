@@ -8,7 +8,6 @@ import com.op.aod.enhance.BuildConfig
 
 /**
  * 低光环境 AOD 保持显示 Hook。
- *
  * ColorOS 在以下场景自动关闭 AOD：
  * 1. 极暗环境（lux ≤ 0.1）→ 立即关闭，调用 hideAodByDarkLight(1)
  * 2. 夜间低光（lux ≤ 5.0 + 夜间超时）→ 延迟关闭，调用 hideAodByDarkLight(0)
@@ -107,7 +106,7 @@ internal object LowLightHideHook {
                 .toClass(appClassLoader).resolve()
                 .firstMethod {
                     name = "setIsHideBySpecialRule"
-                    paramCount = 1
+                    parameters(Boolean::class)
                 }
                 .hook {
                     before {

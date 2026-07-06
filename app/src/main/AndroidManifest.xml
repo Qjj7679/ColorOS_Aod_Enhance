@@ -11,6 +11,7 @@
 
         <activity
             android:name=".ui.MainActivity"
+            android:configChanges="orientation|screenSize|screenLayout"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -20,10 +21,12 @@
 
         <activity
             android:name=".ui.BrightnessActivity"
+            android:configChanges="orientation|screenSize|screenLayout"
             android:exported="false" />
 
         <activity
             android:name=".ui.FeaturesActivity"
+            android:configChanges="orientation|screenSize|screenLayout"
             android:exported="false" />
 
         <provider

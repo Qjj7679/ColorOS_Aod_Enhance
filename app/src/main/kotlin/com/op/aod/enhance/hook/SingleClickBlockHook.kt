@@ -117,6 +117,9 @@ internal object SingleClickBlockHook {
                         }
 
                         // 拦截：首次单击或慢速重试
+                        // 注意：onClick 返回 void/Unit，Xposed 拦截 void 方法
+                        // 在 before 回调中设置 result = null 是正确的拦截方式，
+                        // 等价于 "不执行原始方法"，可阻止单击唤醒触发。
                         lastBlockedTime.set(now)
                         result = null
                         if (BuildConfig.DEBUG) {

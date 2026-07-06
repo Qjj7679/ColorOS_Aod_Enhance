@@ -64,33 +64,26 @@ private fun FeaturesScreen(
     val currentOnSave by rememberUpdatedState(onSave)
     val resolver = LocalContext.current.contentResolver
 
+    // 合并为单个 LaunchedEffect，使用 Triple + nested Triple 构成 Quad
+    // 避免两个 LaunchedEffect 同时触发 write() 导致 IPC update 竞态覆盖
+    @OptIn(FlowPreview::class)
     LaunchedEffect(Unit) {
-        snapshotFlow { Triple(enablePanoramic, enableSettingsSupport, blockSingleClick) }
+        snapshotFlow {
+            Triple(enablePanoramic, enableSettingsSupport, Pair(blockSingleClick, blockLowLightHide))
+        }
             .drop(1) // skip initial emission on Activity creation
             .debounce(300)
             .distinctUntilChanged()
-            .collect { (panoramic, settingsSupport, singleClick) ->
-                // 从缓存读取完整配置再覆写——保证其他页面的设置不被默认值覆盖
+            .collect { (panoramic, settingsSupport, singleClickLowLightHide) ->
                 val base = AodConfigStore.read(resolver)
                 currentOnSave(
                     base.copy(
                         enablePanoramic = panoramic,
                         enableSettingsSupport = settingsSupport,
-                        blockSingleClick = singleClick,
-                        blockLowLightHide = blockLowLightHide,
+                        blockSingleClick = singleClickLowLightHide.first,
+                        blockLowLightHide = singleClickLowLightHide.second,
                     )
                 )
-            }
-    }
-
-    LaunchedEffect(Unit) {
-        snapshotFlow { blockLowLightHide }
-            .drop(1)
-            .debounce(300)
-            .distinctUntilChanged()
-            .collect { lowLightHide ->
-                val base = AodConfigStore.read(resolver)
-                currentOnSave(base.copy(blockLowLightHide = lowLightHide))
             }
     }
 

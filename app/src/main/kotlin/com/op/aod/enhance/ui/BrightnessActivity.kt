@@ -96,7 +96,7 @@ private fun BrightnessScreen(
             Text("熄屏前暗光环境AOD亮度：${initDark.toInt()}")
             Slider(
                 value = initDark,
-                onValueChange = { initDark = it.toInt().toFloat() },
+                onValueChange = { initDark = it.coerceIn(0f, 255f) },
                 valueRange = 0f..255f,
                 steps = 254,
                 modifier = Modifier.fillMaxWidth()
@@ -105,7 +105,7 @@ private fun BrightnessScreen(
             Text("熄屏前亮光环境AOD亮度：${initBright.toInt()}")
             Slider(
                 value = initBright,
-                onValueChange = { initBright = it.toInt().toFloat() },
+                onValueChange = { initBright = it.coerceIn(0f, 255f) },
                 valueRange = 0f..255f,
                 steps = 254,
                 modifier = Modifier.fillMaxWidth()

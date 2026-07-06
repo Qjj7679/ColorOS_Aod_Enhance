@@ -6,13 +6,16 @@ import kotlin.concurrent.Volatile
 /**
  * 配置契约：定义 ContentProvider 的键名和常量。
  *
- * 该文件是 Provider、UI 侧 (AodUiConfig) 和 Hook 侧 (AodConfig) 之间的唯一数据来源，
+ * 该文件是 Provider、UI 侧 (AodConfigStore) 和 Hook 侧 (AodConfig) 之间的唯一数据来源，
  * 添加/修改字段时必须同步更新三处：
  * - AodUiConfig.kt (UI 侧)
  * - AodConfig.kt (Hook 侧)
  * - AodConfigContract.kt (键名定义)
  *
  * 注意：列索引已废弃，两侧统一使用 [getColumnIndex] 按列名查找。
+ *
+ * 线程安全：列索引缓存使用 volatile + synchronized 双重检查，
+ * 避免多线程并发初始化导致重复创建 IntArray。
  */
 object AodConfigContract {
 
@@ -34,27 +37,31 @@ object AodConfigContract {
     const val DEFAULT_BLOCK_SINGLE_CLICK = true
     const val DEFAULT_BLOCK_LOW_LIGHT_HIDE = true
 
-    /** 列索引缓存（延迟初始化，只在首次 readRow 时查询一次）。@Volatile 保证多线程可见性。 */
+    /** 列索引缓存（延迟初始化，只在首次 readRow 时查询一次）。
+     * volatile + synchronized 双重检查保证线程安全。 */
     @Volatile
     private var columnIndices: IntArray? = null
 
     /**
      * 获取缓存的列索引，如果尚未初始化则先查询并缓存。
-     * 避免每次 readRow 都调用 getColumnIndexOrThrow。
+     * synchronized 双重检查避免多线程并发创建多个 IntArray。
      */
     private fun getCachedColumnIndices(c: Cursor): IntArray {
         columnIndices?.let { return it }
-        val indices = intArrayOf(
-            c.getColumnIndexOrThrow(KEY_INIT_DARK),
-            c.getColumnIndexOrThrow(KEY_INIT_BRIGHT),
-            c.getColumnIndexOrThrow(KEY_RUNNING_MULTIPLIER),
-            c.getColumnIndexOrThrow(KEY_ENABLE_PANORAMIC),
-            c.getColumnIndexOrThrow(KEY_ENABLE_SETTINGS_SUPPORT),
-            c.getColumnIndexOrThrow(KEY_BLOCK_SINGLE_CLICK),
-            c.getColumnIndexOrThrow(KEY_BLOCK_LOW_LIGHT_HIDE),
-        )
-        columnIndices = indices
-        return indices
+        synchronized(this) {
+            columnIndices?.let { return it } // 双重检查
+            val indices = intArrayOf(
+                c.getColumnIndexOrThrow(KEY_INIT_DARK),
+                c.getColumnIndexOrThrow(KEY_INIT_BRIGHT),
+                c.getColumnIndexOrThrow(KEY_RUNNING_MULTIPLIER),
+                c.getColumnIndexOrThrow(KEY_ENABLE_PANORAMIC),
+                c.getColumnIndexOrThrow(KEY_ENABLE_SETTINGS_SUPPORT),
+                c.getColumnIndexOrThrow(KEY_BLOCK_SINGLE_CLICK),
+                c.getColumnIndexOrThrow(KEY_BLOCK_LOW_LIGHT_HIDE),
+            )
+            columnIndices = indices
+            return indices
+        }
     }
 
     /**

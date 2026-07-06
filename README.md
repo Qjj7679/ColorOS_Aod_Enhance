@@ -28,8 +28,11 @@ ColorOS 息屏显示（AOD）增强模块（Xposed）。提供可视化配置界
 4. 打开模块 App 配置各项参数，修改后自动保存
 
 > ⚠️ UI 保存后配置即时写入，Hook 侧读取方式按功能不同：
-> - **亮度相关**：每次触发直读 Provider，修改后即时生效（≤1s）
-> - **功能开关**：进程启动时预读，修改后需**重启系统界面/息屏进程或设备**才能生效
+> - **亮度相关**：Hook 回调中读取 Provider，修改后近实时生效（受 1 秒缓存影响）
+> - **低光环境保持 AOD 显示**：Hook 回调中读取 Provider，修改后近实时生效（受 1 秒缓存影响）
+> - **息屏全天全景 AOD 开关显示**：Hook 回调中读取 Provider，通常近实时生效；若设置页已缓存状态，需重启息屏进程或设备
+> - **全天全景 AOD 支持**：Hook 注册后在系统初始化/远程更新时修正能力字段，修改后建议重启系统界面
+> - **AOD 单击唤醒屏蔽**：关闭时不会注册部分 Hook，修改后建议重启系统界面
 
 ## 构建
 
@@ -73,8 +76,8 @@ MIT
 ### v1.5 — 配置重构与性能优化
 
 - 新增 `AodConfigContract.readRow()` 统一 UI 和 Hook 侧的 Cursor 解析逻辑
-- SingleClickBlockHook 回调中仅做 int 对比，无配置读取无反射
-- `AtomicReference` 改为 `@Volatile var`，读写路径减少一层对象包装
+- SingleClickBlockHook 回调中减少配置读取和反射开销
+- UI 侧与 Hook 侧使用 `AtomicReference` 缓存配置，降低重复 IPC 读取开销
 
 ### v1.4 — 适配 ColorOS 16.0.5 及以上版本 (Android 16)
 
